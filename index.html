@@ -482,44 +482,7 @@
 
         /* System Monitor */
         .system-monitor {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            width: 200px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            color: var(--success);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-        }
-
-        .monitor-line {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.3rem;
-        }
-
-        .monitor-bar {
-            width: 60px;
-            height: 4px;
-            background: rgba(0, 204, 102, 0.2);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .monitor-fill {
-            height: 100%;
-            background: var(--success);
-            animation: dataFlow 2s ease-in-out infinite;
-        }
-
-        @keyframes dataFlow {
-            0%, 100% { width: 60%; }
-            50% { width: 90%; }
+            display: none;
         }
 
         /* Enhanced Header */
@@ -845,27 +808,6 @@
         <div class="hud-corner hud-br"></div>
     </div>
 
-    <!-- System Monitor -->
-    <div class="system-monitor">
-        <div style="color: var(--primary); margin-bottom: 0.5rem; font-weight: 600;">SYSTEM MONITOR</div>
-        <div class="monitor-line">
-            <span>CPU:</span>
-            <div class="monitor-bar"><div class="monitor-fill" style="width: 76%;"></div></div>
-        </div>
-        <div class="monitor-line">
-            <span>RAM:</span>
-            <div class="monitor-bar"><div class="monitor-fill" style="width: 64%;"></div></div>
-        </div>
-        <div class="monitor-line">
-            <span>NET:</span>
-            <div class="monitor-bar"><div class="monitor-fill" style="width: 89%;"></div></div>
-        </div>
-        <div class="monitor-line">
-            <span>SEC:</span>
-            <div class="monitor-bar"><div class="monitor-fill" style="width: 100%;"></div></div>
-        </div>
-    </div>
-
     <!-- Startup Sequence -->
     <div class="startup-container" id="startupContainer">
         <div class="terminal" id="terminal">
@@ -1056,7 +998,7 @@
                 <div class="card-data-flow"></div>
             </div>
 
-            <div class="vault-card" onclick="navigate('cpmgaragestudios.html')">
+            <div class="vault-card" onclick="navigate('cpmgarage.html')">
                 <div class="card-circuit"></div>
                 <div class="card-header">
                     <span class="card-icon">🏭</span>

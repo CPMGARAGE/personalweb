@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attack on Titan Season 2 - Episode Player</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0a0f;
+            --accent-color: #00d4ff;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --glow-color: #00d4ff;
+            --particle-color: #00d4ff;
+            --missing-color: #ff6b6b;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .dynamic-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(
+                135deg,
+                rgba(10, 10, 15, 0.85) 0%,
+                rgba(10, 10, 15, 0.7) 50%,
+                rgba(10, 10, 15, 0.85) 100%
+            );
+            backdrop-filter: blur(2px);
+        }
+
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(30px);
+            border-bottom: 2px solid var(--accent-color);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--accent-color);
+            text-shadow: 0 0 30px var(--glow-color);
+            letter-spacing: 2px;
+        }
+
+        .back-button {
+            background: var(--glass-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 15px;
+            padding: 0.8rem 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--accent-color);
+            font-size: 1rem;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            box-shadow: 0 0 30px var(--glow-color);
+            transform: scale(1.05);
+        }
+
+        .main-container {
+            margin-top: 100px;
+            padding: 2rem;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .player-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            border-color: var(--accent-color);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+            margin-bottom: 2rem;
+        }
+
+        .player-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        .current-episode {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            background: #000;
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .missing-video {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
+            border: 2px solid var(--missing-color);
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .missing-icon {
+            font-size: 4rem;
+            color: var(--missing-color);
+            margin-bottom: 1rem;
+        }
+
+        .missing-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--missing-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .missing-desc {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            max-width: 400px;
+        }
+
+        .episode-controls {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            border-color: var(--accent-color);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .controls-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        .episode-selector {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .episode-input {
+            background: var(--glass-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 10px;
+            padding: 0.8rem 1.2rem;
+            color: var(--text-primary);
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-align: center;
+            width: 100px;
+            outline: none;
+        }
+
+        .episode-input:focus {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .load-episode-btn {
+            background: linear-gradient(45deg, var(--accent-color), var(--glow-color));
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 0.8rem 2rem;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .load-episode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.5);
+        }
+
+        .navigation-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .nav-btn {
+            background: var(--glass-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 15px;
+            padding: 0.8rem 1.5rem;
+            color: var(--accent-color);
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .nav-btn:disabled:hover {
+            background: var(--glass-bg);
+            color: var(--accent-color);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .episode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .episode-tile {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            color: var(--text-secondary);
+            position: relative;
+        }
+
+        .episode-tile:hover {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            transform: scale(1.05);
+        }
+
+        .episode-tile.current {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            border-color: var(--glow-color);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+        }
+
+        .episode-tile.missing {
+            background: rgba(255, 107, 107, 0.1);
+            border-color: var(--missing-color);
+            color: var(--missing-color);
+            cursor: not-allowed;
+        }
+
+        .episode-tile.missing:hover {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--missing-color);
+            transform: none;
+        }
+
+        .episode-tile.missing::after {
+            content: "❌";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.8rem;
+        }
+
+
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .video-player, .missing-video {
+                height: 250px;
+            }
+            
+            .episode-selector {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .navigation-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .episode-grid {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+    <div class="dynamic-background" id="dynamicBackground"></div>
+    <div class="background-overlay"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">Attack on Titan - Season 2</div>
+            <a href="aot_hub.html" class="back-button">← BACK TO HUB</a>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="player-section">
+            <h1 class="player-title">Attack on Titan Season 2</h1>
+            <div class="current-episode" id="currentEpisodeTitle">Episode 26: Beast Titan</div>
+            
+
+            
+            <div id="videoContainer">
+                <iframe 
+                    id="videoPlayer" 
+                    class="video-player" 
+                    src="https://archive.org/embed/attack-on-titan_202402/26.%20Beast%20Titan.mp4" 
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+
+        <div class="episode-controls">
+            <h2 class="controls-title">Episode Navigator</h2>
+            
+            <div class="episode-selector">
+                <label for="episodeInput" style="color: var(--text-secondary); font-family: 'Orbitron', monospace;">Episode:</label>
+                <input 
+                    type="number" 
+                    id="episodeInput" 
+                    class="episode-input" 
+                    min="26" 
+                    max="37" 
+                    value="26" 
+                    placeholder="26-37"
+                >
+                <button class="load-episode-btn" onclick="loadEpisode()">
+                    ⚡ LOAD EPISODE
+                </button>
+            </div>
+
+            <div class="navigation-buttons">
+                <button class="nav-btn" id="prevBtn" onclick="previousEpisode()">
+                    ← PREVIOUS
+                </button>
+                <button class="nav-btn" onclick="randomEpisode()">
+                    🎲 RANDOM
+                </button>
+                <button class="nav-btn" id="nextBtn" onclick="nextEpisode()">
+                    NEXT →
+                </button>
+            </div>
+
+            <div class="episode-grid" id="episodeGrid">
+                <!-- Episode tiles will be generated by JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Attack on Titan Season 2 episodes (episodes 26-37)
+        const episodes = [
+            { num: 26, title: "Beast Titan", available: true },
+            { num: 27, title: "I'm Home", available: true },
+            { num: 28, title: "Southwestward", available: false }, // MISSING
+            { num: 29, title: "Soldier", available: true },
+            { num: 30, title: "Historia", available: true },
+            { num: 31, title: "Warrior", available: true },
+            { num: 32, title: "Mercy", available: false }, // MISSING
+            { num: 33, title: "The Hunters", available: true },
+            { num: 34, title: "Opening", available: true },
+            { num: 35, title: "Children", available: true },
+            { num: 36, title: "Charge", available: true },
+            { num: 37, title: "Scream", available: true }
+        ];
+
+        // Episode file mapping for the specific archive
+        const episodeFiles = {
+            26: "26.%20Beast%20Titan.mp4",
+            27: "27.%20I%27m%20Home.mp4",
+            29: "29.%20Soldier.mp4",
+            30: "30.%20Historia.mp4",
+            31: "31.%20Warrior.mp4",
+            33: "33.%20The%20Hunters.mp4",
+            34: "34.%20Opening.mp4",
+            35: "35.%20Children.mp4",
+            36: "36.%20Totsugeki.mp4", // Note: "Totsugeki" means "Charge" in Japanese
+            37: "37.%20Scream.mp4"
+        };
+
+        let currentEpisode = 26;
+
+        // Set random background on load
+        function setRandomBackground() {
+            const backgrounds = [
+                "https://wallpapers.com/images/high/eren-mikasa-and-armin-attack-on-titan-anime-dlktfq0hn91j94av.webp",
+                "https://wallpapers.com/images/high/attack-on-titan-anime-levi-ackerman-yqr0chiuqow3zngf.webp",
+                "https://wallpapers.com/images/high/attack-on-titan-anime-mikasa-screaming-z5shrpc4c1b8qw1j.webp",
+                "https://wallpapers.com/images/high/attack-on-titan-anime-burning-town-giant-enq3ni1mxt11csms.webp"
+            ];
+            
+            const randomIndex = Math.floor(Math.random() * backgrounds.length);
+            const backgroundElement = document.getElementById('dynamicBackground');
+            backgroundElement.style.backgroundImage = `url('${backgrounds[randomIndex]}')`;
+        }
+
+        // Particle system
+        class ParticleSystem {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.particles = [];
+                this.resize();
+                this.init();
+                
+                window.addEventListener('resize', () => this.resize());
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            init() {
+                for (let i = 0; i < 75; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2,
+                        size: Math.random() * 3 + 1,
+                        opacity: Math.random() * 0.5 + 0.2
+                    });
+                }
+            }
+
+            animate() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                const color = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--particle-color').trim();
+
+                this.particles.forEach(particle => {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+
+                    if (particle.x < 0 || particle.x > this.canvas.width) particle.vx *= -1;
+                    if (particle.y < 0 || particle.y > this.canvas.height) particle.vy *= -1;
+
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    this.ctx.fillStyle = color;
+                    this.ctx.globalAlpha = particle.opacity;
+                    this.ctx.fill();
+                });
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // Initialize particles
+        const particleSystem = new ParticleSystem(document.getElementById('particles-canvas'));
+        particleSystem.animate();
+
+        // Generate episode grid
+        function generateEpisodeGrid() {
+            const grid = document.getElementById('episodeGrid');
+            grid.innerHTML = '';
+            
+            episodes.forEach(episode => {
+                const tile = document.createElement('div');
+                tile.className = 'episode-tile';
+                tile.textContent = episode.num;
+                
+                if (!episode.available) {
+                    tile.classList.add('missing');
+                    tile.title = `Episode ${episode.num}: ${episode.title} - Not Available`;
+                } else {
+                    tile.onclick = () => goToEpisode(episode.num);
+                    tile.title = `Episode ${episode.num}: ${episode.title}`;
+                }
+                
+                if (episode.num === currentEpisode) {
+                    tile.classList.add('current');
+                }
+                
+                grid.appendChild(tile);
+            });
+        }
+
+        // Update current episode display
+        function updateEpisodeDisplay() {
+            const episode = episodes.find(ep => ep.num === currentEpisode);
+            const titleElement = document.getElementById('currentEpisodeTitle');
+            titleElement.textContent = `Episode ${currentEpisode}: ${episode.title}`;
+            
+            const inputElement = document.getElementById('episodeInput');
+            inputElement.value = currentEpisode;
+            
+            // Update navigation buttons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = currentEpisode === 26;
+            nextBtn.disabled = currentEpisode === 37;
+            
+            // Update episode grid
+            generateEpisodeGrid();
+        }
+
+        // Load specific episode
+        function loadEpisode() {
+            const episodeInput = document.getElementById('episodeInput');
+            const episodeNum = parseInt(episodeInput.value);
+            
+            if (episodeNum >= 26 && episodeNum <= 37) {
+                goToEpisode(episodeNum);
+            } else {
+                alert('Please enter a valid episode number (26-37)');
+            }
+        }
+
+        // Generate episode URL from archive.org base URL or show missing placeholder
+        function generateEpisodeURL(episodeNum) {
+            const baseURL = "https://archive.org/embed/attack-on-titan_202402/";
+            return baseURL + episodeFiles[episodeNum];
+        }
+
+        // Show missing episode placeholder
+        function showMissingEpisode(episodeNum) {
+            const episode = episodes.find(ep => ep.num === episodeNum);
+            const videoContainer = document.getElementById('videoContainer');
+            videoContainer.innerHTML = `
+                <div class="missing-video">
+                    <div class="missing-icon">📹</div>
+                    <div class="missing-text">Episode ${episodeNum} Unavailable</div>
+                    <div class="missing-desc">"${episode.title}" is not available in this collection and will be added when found.</div>
+                </div>
+            `;
+        }
+
+        // Go to specific episode
+        function goToEpisode(episodeNum) {
+            currentEpisode = episodeNum;
+            updateEpisodeDisplay();
+            
+            const episode = episodes.find(ep => ep.num === episodeNum);
+            const videoContainer = document.getElementById('videoContainer');
+            
+            if (episode.available) {
+                // Load video from archive.org
+                const episodeURL = generateEpisodeURL(episodeNum);
+                videoContainer.innerHTML = `
+                    <iframe 
+                        id="videoPlayer" 
+                        class="video-player" 
+                        src="${episodeURL}" 
+                        allowfullscreen>
+                    </iframe>
+                `;
+            } else {
+                // Show missing episode placeholder
+                showMissingEpisode(episodeNum);
+            }
+            
+            // Smooth scroll to video player
+            document.querySelector('.player-section').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+
+        // Navigation functions
+        function previousEpisode() {
+            if (currentEpisode > 26) {
+                goToEpisode(currentEpisode - 1);
+            }
+        }
+
+        function nextEpisode() {
+            if (currentEpisode < 37) {
+                goToEpisode(currentEpisode + 1);
+            }
+        }
+
+        function randomEpisode() {
+            // Only pick from available episodes
+            const availableEpisodes = episodes.filter(ep => ep.available);
+            const randomIndex = Math.floor(Math.random() * availableEpisodes.length);
+            goToEpisode(availableEpisodes[randomIndex].num);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') previousEpisode();
+            if (e.key === 'ArrowRight') nextEpisode();
+            if (e.key === 'r' || e.key === 'R') randomEpisode();
+        });
+
+        // Enter key for episode input
+        document.getElementById('episodeInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadEpisode();
+            }
+        });
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            setRandomBackground();
+            generateEpisodeGrid();
+            updateEpisodeDisplay();
+        });
+    </script>
+</body>
+</html>

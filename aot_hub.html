@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attack on Titan - Anime Hub</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0a0f;
+            --accent-color: #00d4ff;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --glow-color: #00d4ff;
+            --particle-color: #00d4ff;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .dynamic-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(
+                135deg,
+                rgba(10, 10, 15, 0.85) 0%,
+                rgba(10, 10, 15, 0.7) 50%,
+                rgba(10, 10, 15, 0.85) 100%
+            );
+            backdrop-filter: blur(2px);
+        }
+
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(30px);
+            border-bottom: 2px solid var(--accent-color);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--accent-color);
+            text-shadow: 0 0 30px var(--glow-color);
+            letter-spacing: 2px;
+        }
+
+        .back-button {
+            background: var(--glass-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 15px;
+            padding: 0.8rem 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--accent-color);
+            font-size: 1rem;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            box-shadow: 0 0 30px var(--glow-color);
+            transform: scale(1.05);
+        }
+
+        .main-container {
+            margin-top: 100px;
+            padding: 2rem;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hub-title {
+            text-align: center;
+            font-family: 'Orbitron', monospace;
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 2rem;
+            background: linear-gradient(45deg, var(--accent-color), var(--glow-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px var(--glow-color);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .description-box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            border-color: var(--accent-color);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .description-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        .description-text {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .series-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            background: rgba(0, 212, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--accent-color);
+        }
+
+        .info-label {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            color: var(--accent-color);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .episodes-grid {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            border-color: var(--accent-color);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .episodes-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        .episode-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .episode-btn {
+            background: linear-gradient(45deg, var(--accent-color), var(--glow-color));
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 1rem 2rem;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .episode-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.5);
+        }
+
+        .episode-btn.movie {
+            background: linear-gradient(45deg, #ffd700, #ffed4a);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .episode-btn.movie:hover {
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.5);
+        }
+
+        .episode-btn.ova {
+            background: linear-gradient(45deg, #44ff44, #66ff66);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(68, 255, 68, 0.3);
+        }
+
+        .episode-btn.ova:hover {
+            box-shadow: 0 8px 25px rgba(68, 255, 68, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .hub-title {
+                font-size: 2rem;
+            }
+            
+            .series-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+    <div class="dynamic-background" id="dynamicBackground"></div>
+    <div class="background-overlay"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">ATTACK ON TITAN</div>
+            <a href="anime_vault.html" class="back-button">← BACK TO VAULT</a>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <h1 class="hub-title">Attack on Titan Hub</h1>
+        
+        <div class="content-grid">
+            <div class="description-box">
+                <h2 class="description-title">About Attack on Titan</h2>
+                <p class="description-text">
+                    Attack on Titan is set in a world where humanity lives within cities surrounded by enormous walls that protect them from gigantic man-eating humanoids referred to as Titans. The story follows Eren Yeager, who vows to exterminate the Titans after a Titan brings about the destruction of his hometown and the death of his mother.
+                </p>
+                <p class="description-text">
+                    Initially, Eren's squad discovers that some Titans are actually humans with the ability to transform. As the story progresses, it reveals that the Titans are not mindless monsters but rather victims of a larger conspiracy. The series explores themes of survival, freedom, and the cycle of hatred while delivering some of the most intense and emotional storytelling in anime.
+                </p>
+                
+                <div class="series-info">
+                    <div class="info-item">
+                        <div class="info-label">Studio</div>
+                        <div class="info-value">Wit Studio / MAPPA</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Episodes</div>
+                        <div class="info-value">87 Episodes</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Genre</div>
+                        <div class="info-value">Action, Drama, Dark Fantasy</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Year</div>
+                        <div class="info-value">2013 - 2023</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="episodes-grid">
+                <h2 class="episodes-title">Watch Episodes</h2>
+                <div class="episode-buttons">
+                    <button class="episode-btn" onclick="watchSeason('season1')">
+                        ⚡ Season 1 (Episodes 1-25)
+                    </button>
+                    <button class="episode-btn ova" onclick="watchSeason('ova1')">
+                        📼 OVA: Ilse's Notebook
+                    </button>
+                    <button class="episode-btn ova" onclick="watchSeason('ova2')">
+                        📼 OVA: The Sudden Visitor
+                    </button>
+                    <button class="episode-btn ova" onclick="watchSeason('ova3')">
+                        📼 OVA: Distress
+                    </button>
+                    <button class="episode-btn" onclick="watchSeason('season2')">
+                        ⚡ Season 2 (Episodes 26-37)
+                    </button>
+                    <button class="episode-btn ova" onclick="watchSeason('ova4')">
+                        📼 OVA: No Regrets Part 1
+                    </button>
+                    <button class="episode-btn ova" onclick="watchSeason('ova5')">
+                        📼 OVA: No Regrets Part 2
+                    </button>
+                    <button class="episode-btn" onclick="watchSeason('season3part1')">
+                        ⚡ Season 3 Part 1 (Episodes 38-49)
+                    </button>
+                    <button class="episode-btn" onclick="watchSeason('season3part2')">
+                        ⚡ Season 3 Part 2 (Episodes 50-59)
+                    </button>
+                    <button class="episode-btn ova" onclick="watchSeason('ova6')">
+                        📼 OVA: Lost Girls Part 1
+                    </button>
+                    <button class="episode-btn ova" onclick="watchSeason('ova7')">
+                        📼 OVA: Lost Girls Part 2
+                    </button>
+                    <button class="episode-btn ova" onclick="watchSeason('ova8')">
+                        📼 OVA: Lost Girls Part 3
+                    </button>
+                    <button class="episode-btn" onclick="watchSeason('season4part1')">
+                        ⚡ Season 4 Part 1 (Episodes 60-75)
+                    </button>
+                    <button class="episode-btn" onclick="watchSeason('season4part2')">
+                        ⚡ Season 4 Part 2 (Episodes 76-87)
+                    </button>
+                    <button class="episode-btn movie" onclick="watchMovie()">
+                        🎬 The Final Chapters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Attack on Titan backgrounds array
+        const aotBackgrounds = [
+            "https://wallpapers.com/images/high/eren-mikasa-and-armin-attack-on-titan-anime-dlktfq0hn91j94av.webp",
+            "https://wallpapers.com/images/high/attack-on-titan-anime-levi-ackerman-yqr0chiuqow3zngf.webp",
+            "https://wallpapers.com/images/high/attack-on-titan-anime-mikasa-screaming-z5shrpc4c1b8qw1j.webp",
+            "https://wallpapers.com/images/high/attack-on-titan-anime-burning-town-giant-enq3ni1mxt11csms.webp",
+            "https://wallpapers.com/images/high/attack-on-titan-season-3-levi-ackerman-zdrqvkol2uqwkkyz.webp"
+        ];
+
+        let currentBackgroundIndex = 0;
+
+        // Set random background on load
+        function setRandomBackground() {
+            const randomIndex = Math.floor(Math.random() * aotBackgrounds.length);
+            const backgroundElement = document.getElementById('dynamicBackground');
+            backgroundElement.style.backgroundImage = `url('${aotBackgrounds[randomIndex]}')`;
+            currentBackgroundIndex = randomIndex;
+        }
+
+        // Particle system
+        class ParticleSystem {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.particles = [];
+                this.resize();
+                this.init();
+                
+                window.addEventListener('resize', () => this.resize());
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            init() {
+                for (let i = 0; i < 100; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2,
+                        size: Math.random() * 3 + 1,
+                        opacity: Math.random() * 0.5 + 0.2
+                    });
+                }
+            }
+
+            animate() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                const color = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--particle-color').trim();
+
+                this.particles.forEach(particle => {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+
+                    if (particle.x < 0 || particle.x > this.canvas.width) particle.vx *= -1;
+                    if (particle.y < 0 || particle.y > this.canvas.height) particle.vy *= -1;
+
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    this.ctx.fillStyle = color;
+                    this.ctx.globalAlpha = particle.opacity;
+                    this.ctx.fill();
+                });
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // Initialize particles
+        const particleSystem = new ParticleSystem(document.getElementById('particles-canvas'));
+        particleSystem.animate();
+
+        // Watch functions - WIRED TO SEPARATE HTML PAGES
+        function watchSeason(season) {
+            const seasonPages = {
+                'season1': 'aot_season1.html',
+                'ova1': 'aot_ova_ilse.html',
+                'ova2': 'aot_ova_visitor.html',
+                'ova3': 'aot_ova_distress.html',
+                'season2': 'aot_season2.html',
+                'ova4': 'aot_ova_no_regrets_1.html',
+                'ova5': 'aot_ova_no_regrets_2.html',
+                'season3part1': 'aot_season3_part1.html',
+                'season3part2': 'aot_season3_part2.html',
+                'ova6': 'aot_ova_lost_girls_1.html',
+                'ova7': 'aot_ova_lost_girls_2.html',
+                'ova8': 'aot_ova_lost_girls_3.html',
+                'season4part1': 'aot_season4_part1.html',
+                'season4part2': 'aot_season4_part2.html'
+            };
+            
+            window.location.href = seasonPages[season];
+        }
+
+        function watchMovie() {
+            window.location.href = 'aot_final_chapters.html';
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            setRandomBackground();
+        });
+    </script>
+</body>
+</html>

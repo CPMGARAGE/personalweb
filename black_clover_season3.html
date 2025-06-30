@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Black Clover Season 3 - Episode Player</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0a0f;
+            --accent-color: #00d4ff;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --glow-color: #00d4ff;
+            --particle-color: #00d4ff;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .dynamic-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(
+                135deg,
+                rgba(10, 10, 15, 0.85) 0%,
+                rgba(10, 10, 15, 0.7) 50%,
+                rgba(10, 10, 15, 0.85) 100%
+            );
+            backdrop-filter: blur(2px);
+        }
+
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(30px);
+            border-bottom: 2px solid var(--accent-color);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--accent-color);
+            text-shadow: 0 0 30px var(--glow-color);
+            letter-spacing: 2px;
+        }
+
+        .back-button {
+            background: var(--glass-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 15px;
+            padding: 0.8rem 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--accent-color);
+            font-size: 1rem;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            box-shadow: 0 0 30px var(--glow-color);
+            transform: scale(1.05);
+        }
+
+        .main-container {
+            margin-top: 100px;
+            padding: 2rem;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .player-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            border-color: var(--accent-color);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+            margin-bottom: 2rem;
+        }
+
+        .player-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        .current-episode {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            background: #000;
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .episode-controls {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            border-color: var(--accent-color);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .controls-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        .episode-selector {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .episode-input {
+            background: var(--glass-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 10px;
+            padding: 0.8rem 1.2rem;
+            color: var(--text-primary);
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-align: center;
+            width: 100px;
+            outline: none;
+        }
+
+        .episode-input:focus {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .load-episode-btn {
+            background: linear-gradient(45deg, var(--accent-color), var(--glow-color));
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 0.8rem 2rem;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .load-episode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.5);
+        }
+
+        .navigation-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .nav-btn {
+            background: var(--glass-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 15px;
+            padding: 0.8rem 1.5rem;
+            color: var(--accent-color);
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .nav-btn:disabled:hover {
+            background: var(--glass-bg);
+            color: var(--accent-color);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .episode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .episode-tile {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .episode-tile:hover {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            transform: scale(1.05);
+        }
+
+        .episode-tile.current {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            border-color: var(--glow-color);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .video-player {
+                height: 250px;
+            }
+            
+            .episode-selector {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .navigation-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .episode-grid {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+    <div class="dynamic-background" id="dynamicBackground"></div>
+    <div class="background-overlay"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">BLACK CLOVER - SEASON 3</div>
+            <a href="black_clover_hub.html" class="back-button">← BACK TO HUB</a>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="player-section">
+            <h1 class="player-title">Black Clover Season 3</h1>
+            <div class="current-episode" id="currentEpisodeTitle">Episode 103: Release from Misfortune</div>
+            <iframe 
+                id="videoPlayer" 
+                class="video-player" 
+                src="https://archive.org/embed/bl5ck-cl0v3r-tv-dub-seasons-3" 
+                allowfullscreen>
+            </iframe>
+        </div>
+
+        <div class="episode-controls">
+            <h2 class="controls-title">Episode Navigator</h2>
+            
+            <div class="episode-selector">
+                <label for="episodeInput" style="color: var(--text-secondary); font-family: 'Orbitron', monospace;">Episode:</label>
+                <input 
+                    type="number" 
+                    id="episodeInput" 
+                    class="episode-input" 
+                    min="103" 
+                    max="154" 
+                    value="103" 
+                    placeholder="103-154"
+                >
+                <button class="load-episode-btn" onclick="loadEpisode()">
+                    ⚡ LOAD EPISODE
+                </button>
+            </div>
+
+            <div class="navigation-buttons">
+                <button class="nav-btn" id="prevBtn" onclick="previousEpisode()">
+                    ← PREVIOUS
+                </button>
+                <button class="nav-btn" onclick="randomEpisode()">
+                    🎲 RANDOM
+                </button>
+                <button class="nav-btn" id="nextBtn" onclick="nextEpisode()">
+                    NEXT →
+                </button>
+            </div>
+
+            <div class="episode-grid" id="episodeGrid">
+                <!-- Episode tiles will be generated by JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Black Clover Season 3 episodes data (Episodes 103-154)
+        const episodes = [
+            "Release from Misfortune",                         // Episode 103
+            "Lightning of Rage vs. Friends",                  // Episode 104
+            "Smash the Mirror",                                // Episode 105
+            "A Fun Festival Triple Date",                     // Episode 106
+            "The Memories of That Day",                       // Episode 107
+            "Drowa and Eclat",                                // Episode 108
+            "Spatial Magic: Close Call",                      // Episode 109
+            "The Raging Bull Joins the Showdown!! 2",        // Episode 110
+            "The Eyes in the Mirror",                         // Episode 111
+            "Humans Who Can Be Trusted",                      // Episode 112
+            "Sacrifice",                                       // Episode 113
+            "The Final Invaders 2",                          // Episode 114
+            "The Demon-Dweller Sword vs. The Diamond Kingdom", // Episode 115
+            "The Ultimate Natural Enemy",                     // Episode 116
+            "Breaking the Seal",                              // Episode 117
+            "The Sealed Devil",                               // Episode 118
+            "The Clover Kingdom's Strongest Mage",           // Episode 119
+            "Dawn",                                           // Episode 120
+            "Three Problems",                                 // Episode 121
+            "Trouble Comes in Threes",                       // Episode 122
+            "Nero Reminisces... Part 1",                     // Episode 123
+            "Nero Reminisces... Part 2",                     // Episode 124
+            "Return",                                         // Episode 125
+            "The Blue Rose's Confession",                     // Episode 126
+            "Marks",                                          // Episode 127
+            "Devil Megicula",                                 // Episode 128
+            "A Resolution with the Past",                    // Episode 129
+            "The Lion Awakens",                               // Episode 130
+            "A Witch's Homecoming",                           // Episode 131
+            "Time's Up",                                      // Episode 132
+            "Asta's Demon",                                   // Episode 133
+            "The Heart Kingdom",                              // Episode 134
+            "The New Magic Knight Squad Captain",            // Episode 135
+            "The Time of Awakening Has Come",                // Episode 136
+            "A New Resolve",                                  // Episode 137
+            "The Lion Awakens, Continued",                   // Episode 138
+            "In Zara's Footsteps",                           // Episode 139
+            "A Three-Way Deadlock",                          // Episode 140
+            "A Whirlpool of Confusion",                      // Episode 141
+            "Those Who Wish for the Devil's Demise",        // Episode 142
+            "The Spade Kingdom",                              // Episode 143
+            "Those Who Wish for the Devil's Demise 2",      // Episode 144
+            "Rescue",                                         // Episode 145
+            "Those Who Have Been Gathered",                  // Episode 146
+            "The Maidens' Challenge",                         // Episode 147
+            "Two Miracles",                                   // Episode 148
+            "Two Miracles 2",                                // Episode 149
+            "The Maidens' Challenge 2",                      // Episode 150
+            "A Clash of Convictions",                        // Episode 151
+            "The Maidens' Challenge 3",                      // Episode 152
+            "The Chosen Ones",                                // Episode 153
+            "Vice Captain Langris Vaude"                     // Episode 154
+        ];
+
+        let currentEpisode = 103;
+
+        // Internet Archive episode mapping - maps our episode numbers to IA file positions
+        const archiveMapping = {
+            103: 1,  104: 2,  105: 3,  106: 4,  107: 5,  108: 6,  109: 7,  110: 8,  111: 9,  112: 10,
+            113: 11, 114: 12, 115: 13, 116: 14, 117: 15, 118: 16, 119: 17, 120: 18, 121: 19, 122: 20,
+            123: 21, 124: 22, 125: 23, 126: 24, 127: 25, 128: 26, 129: 27, 130: 28, 131: 29, 132: 30,
+            133: 31, 134: 32, 135: 33, 136: 34, 137: 35, 138: 36, 139: 37, 140: 38, 141: 39, 142: 40,
+            143: 41, 144: 42, 145: 43, 146: 44, 147: 45, 148: 46, 149: 47, 150: 48, 151: 49, 152: 50,
+            153: 51, 154: 52
+        };
+
+        // Set random background on load
+        function setRandomBackground() {
+            const backgrounds = [
+                "https://wallpapers.com/images/hd/black-clover-asta-n3ct2rb5de0egda0.jpg",
+                "https://wallpapers.com/images/high/black-clover-3k9jgcfbgh4h74ll.webp",
+                "https://wallpapers.com/images/high/black-clover-yami-mwgl8bqf1w26fom8.webp",
+                "https://wallpapers.com/images/high/black-clover-yami-bpkvo05zael6b5i2.webp"
+            ];
+            
+            const randomIndex = Math.floor(Math.random() * backgrounds.length);
+            const backgroundElement = document.getElementById('dynamicBackground');
+            backgroundElement.style.backgroundImage = `url('${backgrounds[randomIndex]}')`;
+        }
+
+        // Particle system
+        class ParticleSystem {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.particles = [];
+                this.resize();
+                this.init();
+                
+                window.addEventListener('resize', () => this.resize());
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            init() {
+                for (let i = 0; i < 50; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2,
+                        size: Math.random() * 3 + 1,
+                        opacity: Math.random() * 0.5 + 0.2
+                    });
+                }
+            }
+
+            animate() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                const color = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--particle-color').trim();
+
+                this.particles.forEach(particle => {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+
+                    if (particle.x < 0 || particle.x > this.canvas.width) particle.vx *= -1;
+                    if (particle.y < 0 || particle.y > this.canvas.height) particle.vy *= -1;
+
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    this.ctx.fillStyle = color;
+                    this.ctx.globalAlpha = particle.opacity;
+                    this.ctx.fill();
+                });
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // Initialize particles
+        const particleSystem = new ParticleSystem(document.getElementById('particles-canvas'));
+        particleSystem.animate();
+
+        // Update current episode display
+        function updateEpisodeDisplay() {
+            const titleElement = document.getElementById('currentEpisodeTitle');
+            const episodeIndex = currentEpisode - 103; // Convert to 0-based index for episodes array
+            titleElement.textContent = `Episode ${currentEpisode}: ${episodes[episodeIndex]}`;
+            
+            const inputElement = document.getElementById('episodeInput');
+            inputElement.value = currentEpisode;
+            
+            // Update navigation buttons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = currentEpisode === 103;
+            nextBtn.disabled = currentEpisode === 154;
+            
+            // Update episode grid
+            generateEpisodeGrid();
+        }
+
+        // Generate episode grid
+        function generateEpisodeGrid() {
+            const grid = document.getElementById('episodeGrid');
+            grid.innerHTML = '';
+            
+            for (let i = 103; i <= 154; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'episode-tile';
+                tile.textContent = i;
+                tile.onclick = () => goToEpisode(i);
+                
+                if (i === currentEpisode) {
+                    tile.classList.add('current');
+                }
+                
+                grid.appendChild(tile);
+            }
+        }
+
+        // Load specific episode
+        function loadEpisode() {
+            const episodeInput = document.getElementById('episodeInput');
+            const episodeNum = parseInt(episodeInput.value);
+            
+            if (episodeNum >= 103 && episodeNum <= 154) {
+                goToEpisode(episodeNum);
+            } else {
+                alert('Please enter a valid episode number (103-154)');
+            }
+        }
+
+        // Go to specific episode
+        function goToEpisode(episodeNum) {
+            currentEpisode = episodeNum;
+            updateEpisodeDisplay();
+            
+            // Get the correct archive position for this episode
+            const archivePosition = archiveMapping[episodeNum];
+            
+            // Update video player with specific episode using correct mapping
+            const videoPlayer = document.getElementById('videoPlayer');
+            const baseUrl = 'https://archive.org/embed/bl5ck-cl0v3r-tv-dub-seasons-3';
+            videoPlayer.src = `${baseUrl}?start=${archivePosition}`;
+            
+            // Smooth scroll to video player
+            document.querySelector('.player-section').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+
+        // Navigation functions
+        function previousEpisode() {
+            if (currentEpisode > 103) {
+                goToEpisode(currentEpisode - 1);
+            }
+        }
+
+        function nextEpisode() {
+            if (currentEpisode < 154) {
+                goToEpisode(currentEpisode + 1);
+            }
+        }
+
+        function randomEpisode() {
+            const randomEp = Math.floor(Math.random() * 52) + 103; // 52 episodes in season 3
+            goToEpisode(randomEp);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') previousEpisode();
+            if (e.key === 'ArrowRight') nextEpisode();
+            if (e.key === 'r' || e.key === 'R') randomEpisode();
+        });
+
+        // Enter key for episode input
+        document.getElementById('episodeInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadEpisode();
+            }
+        });
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            setRandomBackground();
+            generateEpisodeGrid();
+            updateEpisodeDisplay();
+        });
+    </script>
+</body>
+</html>

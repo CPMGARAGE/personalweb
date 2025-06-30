@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attack on Titan Season 1 - Episode Player</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0a0f;
+            --accent-color: #00d4ff;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --glow-color: #00d4ff;
+            --particle-color: #00d4ff;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .dynamic-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(
+                135deg,
+                rgba(10, 10, 15, 0.85) 0%,
+                rgba(10, 10, 15, 0.7) 50%,
+                rgba(10, 10, 15, 0.85) 100%
+            );
+            backdrop-filter: blur(2px);
+        }
+
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(30px);
+            border-bottom: 2px solid var(--accent-color);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--accent-color);
+            text-shadow: 0 0 30px var(--glow-color);
+            letter-spacing: 2px;
+        }
+
+        .back-button {
+            background: var(--glass-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 15px;
+            padding: 0.8rem 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--accent-color);
+            font-size: 1rem;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            box-shadow: 0 0 30px var(--glow-color);
+            transform: scale(1.05);
+        }
+
+        .main-container {
+            margin-top: 100px;
+            padding: 2rem;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .player-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            border-color: var(--accent-color);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+            margin-bottom: 2rem;
+        }
+
+        .player-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        .current-episode {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            background: #000;
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .episode-controls {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            border-color: var(--accent-color);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .controls-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        .episode-selector {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .episode-input {
+            background: var(--glass-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 10px;
+            padding: 0.8rem 1.2rem;
+            color: var(--text-primary);
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-align: center;
+            width: 100px;
+            outline: none;
+        }
+
+        .episode-input:focus {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .load-episode-btn {
+            background: linear-gradient(45deg, var(--accent-color), var(--glow-color));
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 0.8rem 2rem;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .load-episode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.5);
+        }
+
+        .navigation-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .nav-btn {
+            background: var(--glass-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 15px;
+            padding: 0.8rem 1.5rem;
+            color: var(--accent-color);
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .nav-btn:disabled:hover {
+            background: var(--glass-bg);
+            color: var(--accent-color);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .episode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .episode-tile {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .episode-tile:hover {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            transform: scale(1.05);
+        }
+
+        .episode-tile.current {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            border-color: var(--glow-color);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .video-player {
+                height: 250px;
+            }
+            
+            .episode-selector {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .navigation-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .episode-grid {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+    <div class="dynamic-background" id="dynamicBackground"></div>
+    <div class="background-overlay"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">Attack on Titan - Season 1</div>
+            <a href="aot_hub.html" class="back-button">← BACK TO HUB</a>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="player-section">
+            <h1 class="player-title">Attack on Titan Season 1</h1>
+            <div class="current-episode" id="currentEpisodeTitle">Episode 1: To You, in 2000 Years: The Fall of Shiganshina, Part 1</div>
+            <iframe 
+                id="videoPlayer" 
+                class="video-player" 
+                src="https://archive.org/embed/aot-s-1/Attack+on+Titan+(2013)+Season+1+S01+(1080p+BluRay+x265+HEVC+10bit+AAC+5.1+ImE)+REPACK/Attack+on+Titan+(2013)+-+S01E01+(1)+-+To+You%2C+in+2000+Years+The+Fall+of+Shiganshina%2C+Part+1+(1080p+BluRay+x265+ImE).mkv" 
+                allowfullscreen>
+            </iframe>
+        </div>
+
+        <div class="episode-controls">
+            <h2 class="controls-title">Episode Navigator</h2>
+            
+            <div class="episode-selector">
+                <label for="episodeInput" style="color: var(--text-secondary); font-family: 'Orbitron', monospace;">Episode:</label>
+                <input 
+                    type="number" 
+                    id="episodeInput" 
+                    class="episode-input" 
+                    min="1" 
+                    max="25" 
+                    value="1" 
+                    placeholder="1-25"
+                >
+                <button class="load-episode-btn" onclick="loadEpisode()">
+                    ⚡ LOAD EPISODE
+                </button>
+            </div>
+
+            <div class="navigation-buttons">
+                <button class="nav-btn" id="prevBtn" onclick="previousEpisode()">
+                    ← PREVIOUS
+                </button>
+                <button class="nav-btn" onclick="randomEpisode()">
+                    🎲 RANDOM
+                </button>
+                <button class="nav-btn" id="nextBtn" onclick="nextEpisode()">
+                    NEXT →
+                </button>
+            </div>
+
+            <div class="episode-grid" id="episodeGrid">
+                <!-- Episode tiles will be generated by JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Attack on Titan Season 1 episodes (all 25 episodes)
+        const episodes = [
+            "To You, in 2000 Years: The Fall of Shiganshina, Part 1",       // Episode 1
+            "That Day: The Fall of Shiganshina, Part 2",                    // Episode 2
+            "A Dim Light Amid Despair: Humanity's Comeback, Part 1",        // Episode 3
+            "The Night of the Closing Ceremony: Humanity's Comeback, Part 2", // Episode 4
+            "First Battle: The Struggle for Trost, Part 1",                 // Episode 5
+            "The World the Girl Saw: The Struggle for Trost, Part 2",       // Episode 6
+            "Small Blade: The Struggle for Trost, Part 3",                  // Episode 7
+            "I Can Hear His Heartbeat: The Struggle for Trost, Part 4",     // Episode 8
+            "Whereabouts of His Left Arm: The Struggle for Trost, Part 5",  // Episode 9
+            "Response: The Struggle for Trost, Part 6",                     // Episode 10
+            "Idol: The Struggle for Trost, Part 7",                         // Episode 11
+            "Wound: The Struggle for Trost, Part 8",                        // Episode 12
+            "Primal Desire: The Struggle for Trost, Part 9",                // Episode 13
+            "Can't Look into His Eyes Yet: Eve of the Counterattack, Part 1", // Episode 14
+            "Special Operations Squad: Eve of the Counterattack, Part 2",    // Episode 15
+            "What Needs to be Done Now: Eve of the Counterattack, Part 3",  // Episode 16
+            "Female Titan: The 57th Expedition Beyond the Walls, Part 1",   // Episode 17
+            "Forest of Giant Trees: The 57th Expedition Beyond the Walls, Part 2", // Episode 18
+            "Bite: The 57th Expedition Beyond the Walls, Part 3",           // Episode 19
+            "Erwin Smith: The 57th Expedition Beyond the Walls, Part 4",    // Episode 20
+            "Crushing Blow: The 57th Expedition Beyond the Walls, Part 5",  // Episode 21
+            "The Defeated: The 57th Expedition Beyond the Walls, Part 6",   // Episode 22
+            "Smile: Assault on Stohess, Part 1",                           // Episode 23
+            "Mercy: Assault on Stohess, Part 2",                           // Episode 24
+            "Wall: Assault on Stohess, Part 3"                             // Episode 25
+        ];
+
+        let currentEpisode = 1;
+
+        // Set random background on load
+        function setRandomBackground() {
+            const backgrounds = [
+                "https://wallpapers.com/images/high/eren-mikasa-and-armin-attack-on-titan-anime-dlktfq0hn91j94av.webp",
+                "https://wallpapers.com/images/high/attack-on-titan-anime-levi-ackerman-yqr0chiuqow3zngf.webp",
+                "https://wallpapers.com/images/high/attack-on-titan-anime-mikasa-screaming-z5shrpc4c1b8qw1j.webp",
+                "https://wallpapers.com/images/high/attack-on-titan-anime-burning-town-giant-giant-enq3ni1mxt11csms.webp"
+            ];
+            
+            const randomIndex = Math.floor(Math.random() * backgrounds.length);
+            const backgroundElement = document.getElementById('dynamicBackground');
+            backgroundElement.style.backgroundImage = `url('${backgrounds[randomIndex]}')`;
+        }
+
+        // Particle system
+        class ParticleSystem {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.particles = [];
+                this.resize();
+                this.init();
+                
+                window.addEventListener('resize', () => this.resize());
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            init() {
+                for (let i = 0; i < 75; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2,
+                        size: Math.random() * 3 + 1,
+                        opacity: Math.random() * 0.5 + 0.2
+                    });
+                }
+            }
+
+            animate() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                const color = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--particle-color').trim();
+
+                this.particles.forEach(particle => {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+
+                    if (particle.x < 0 || particle.x > this.canvas.width) particle.vx *= -1;
+                    if (particle.y < 0 || particle.y > this.canvas.height) particle.vy *= -1;
+
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    this.ctx.fillStyle = color;
+                    this.ctx.globalAlpha = particle.opacity;
+                    this.ctx.fill();
+                });
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // Initialize particles
+        const particleSystem = new ParticleSystem(document.getElementById('particles-canvas'));
+        particleSystem.animate();
+
+        // Generate episode grid
+        function generateEpisodeGrid() {
+            const grid = document.getElementById('episodeGrid');
+            grid.innerHTML = '';
+            
+            for (let i = 1; i <= 25; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'episode-tile';
+                tile.textContent = i;
+                tile.onclick = () => goToEpisode(i);
+                
+                if (i === currentEpisode) {
+                    tile.classList.add('current');
+                }
+                
+                grid.appendChild(tile);
+            }
+        }
+
+        // Update current episode display
+        function updateEpisodeDisplay() {
+            const titleElement = document.getElementById('currentEpisodeTitle');
+            titleElement.textContent = `Episode ${currentEpisode}: ${episodes[currentEpisode - 1]}`;
+            
+            const inputElement = document.getElementById('episodeInput');
+            inputElement.value = currentEpisode;
+            
+            // Update navigation buttons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = currentEpisode === 1;
+            nextBtn.disabled = currentEpisode === 25;
+            
+            // Update episode grid
+            generateEpisodeGrid();
+        }
+
+        // Load specific episode
+        function loadEpisode() {
+            const episodeInput = document.getElementById('episodeInput');
+            const episodeNum = parseInt(episodeInput.value);
+            
+            if (episodeNum >= 1 && episodeNum <= 25) {
+                goToEpisode(episodeNum);
+            } else {
+                alert('Please enter a valid episode number (1-25)');
+            }
+        }
+
+        // Generate episode URL from archive.org base URL
+        function generateEpisodeURL(episodeNum) {
+            const baseURL = "https://archive.org/embed/aot-s-1/Attack+on+Titan+(2013)+Season+1+S01+(1080p+BluRay+x265+HEVC+10bit+AAC+5.1+ImE)+REPACK/";
+            
+            // Format episode number with leading zero
+            const episodeStr = episodeNum.toString().padStart(2, '0');
+            
+            // Episode file naming pattern based on the provided URL
+            const episodeFile = `Attack+on+Titan+(2013)+-+S01E${episodeStr}+(${episodeNum})+-+${encodeURIComponent(episodes[episodeNum - 1])}+(1080p+BluRay+x265+ImE).mkv`;
+            
+            return baseURL + episodeFile;
+        }
+
+        // Go to specific episode
+        function goToEpisode(episodeNum) {
+            currentEpisode = episodeNum;
+            updateEpisodeDisplay();
+            
+            // Load video from archive.org
+            const videoPlayer = document.getElementById('videoPlayer');
+            const episodeURL = generateEpisodeURL(episodeNum);
+            videoPlayer.src = episodeURL;
+            
+            // Smooth scroll to video player
+            document.querySelector('.player-section').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+
+        // Navigation functions
+        function previousEpisode() {
+            if (currentEpisode > 1) {
+                goToEpisode(currentEpisode - 1);
+            }
+        }
+
+        function nextEpisode() {
+            if (currentEpisode < 25) {
+                goToEpisode(currentEpisode + 1);
+            }
+        }
+
+        function randomEpisode() {
+            const randomEp = Math.floor(Math.random() * 25) + 1;
+            goToEpisode(randomEp);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') previousEpisode();
+            if (e.key === 'ArrowRight') nextEpisode();
+            if (e.key === 'r' || e.key === 'R') randomEpisode();
+        });
+
+        // Enter key for episode input
+        document.getElementById('episodeInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadEpisode();
+            }
+        });
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            setRandomBackground();
+            generateEpisodeGrid();
+            updateEpisodeDisplay();
+        });
+    </script>
+</body>
+</html>
